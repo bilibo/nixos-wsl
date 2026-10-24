@@ -1,4 +1,10 @@
-# nixos/configuration.nix  -  NixOS 26.05 on WSL2, a managed claude-nix-harness host
+# nixos/configuration.nix  -  NixOS 26.05 on WSL2, a plain opinionated workbench
+#
+# No claude-nix-harness modules (2026-10-24): the harness is installed
+# afterwards as the user (`nix run github:bilibo/claude-nix-harness#harness
+# -- bootstrap`), and its guard rails apply inside the work repos that
+# `harness init` set up. This file only carries the sandbox prerequisites
+# that bootstrap cannot write on NixOS (section "Sandbox prerequisites").
 #
 # /etc/nixos is a git checkout of this repo and the box is pull-only: the
 # harness checkout's scripts/install-wsl.ps1 (or scripts/wsl/update.sh inside
@@ -6,7 +12,7 @@
 # with `nix flake update`. After changing wsl.* options also run from Windows:
 #   wsl -t NixOS
 
-{ config, lib, pkgs, inputs, ... }:
+{ lib, pkgs, ... }:
 
 {
   ######## WSL integration (nix-community/NixOS-WSL module) ##################
@@ -26,7 +32,8 @@
 
   wsl.wslConf = {
     # metadata: chmod/chown work on /mnt/c files (git, scripts, ssh keys).
-    # Harness sessions never see /mnt/c: the wsl platform denies it in the sandbox.
+    # Sessions in harness repos never see /mnt/c: `harness init` sets the wsl
+    # platform there, which denies it in the sandbox.
     automount.options = "metadata,uid=1000,gid=100,umask=022,fmask=011";
     # WSL owns /etc/resolv.conf and /etc/hosts. With dnsTunneling=true in
     # .wslconfig resolv.conf points at 10.255.255.254 and WSL forwards every
@@ -54,32 +61,40 @@
   networking.firewall.enable = true;
   networking.firewall.trustedInterfaces = [ "loopback0" ];
 
-  ######## claude-nix-harness: the managed layer #############################
-  # Root-owned managed settings at /etc/claude-code: every rule everywhere,
-  # strict network allowlist, mod policy. platform auto-detects "wsl".
-  harness.enable = true;
-  # The Claude Code sandbox is bubblewrap; the module asserts this.
+  ######## Sandbox prerequisites for a later `harness bootstrap` ##############
+  # Not Claude Code configuration: no settings, rules or hooks live here.
+  # These are what the claude-nix-harness bootstrap needs from the system and,
+  # on NixOS, cannot write itself (it prints them instead; `harness doctor`
+  # reports each one):
+  #   1. user namespaces: the Claude Code Bash sandbox is bubblewrap (below)
+  #   2. bubblewrap and socat on PATH (environment.systemPackages)
+  #   3. flakes and the devenv.cachix.org substituter (nix.settings), the
+  #      block `harness bootstrap` prints when /etc/nix/nix.conf lacks them
+  #   4. allowUnfree (below)
   security.allowUserNamespaces = true;
+  # Claude Code is unfree in nixpkgs. The bootstrap's own packages come from
+  # the harness flake and a repo's shell sets allow_unfree in its devenv.yaml,
+  # so this is for the system side: claude-code, or the managed home module,
+  # added to this configuration later builds without another edit.
+  nixpkgs.config.allowUnfree = true;
 
-  # The user side: direnv >= 2.38, devenv, tmux, programs.claude-code, ccmux.
+  # home-manager stays for workbench.nix (~/.vscode-server/server-env-setup).
+  # It does NOT manage bash: `harness bootstrap` writes the direnv hook and
+  # HARNESS_CODE_ROOT into ~/.bashrc and ~/.bashrc.d, and skips (only prints
+  # an option for) any rc file that is a home-manager store symlink.
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
   home-manager.users.raulk = {
-    imports = [ inputs.harness.homeModules.harness ];
-    harness.enable = true;
-    # home-manager only wires the direnv hook and the HARNESS_* session
-    # variables into shells it manages; the harness module leaves that to the host.
-    programs.bash.enable = true;
     home.stateVersion = "26.05";
   };
-  # claude-code is unfree in nixpkgs.
-  nixpkgs.config.allowUnfree = true;
-  # devenv comes from nixpkgs (nixos-unstable, the branch the harness is built
-  # against). The 26.05 release branch shipped devenv 2.1.2, which cannot enter
-  # a harness shell on today's stdenv; unstable carries 2.4.x.
+  # devenv comes from the harness flake through `harness bootstrap` (`nix
+  # profile add`), pinned by the harness's flake.lock, not from this nixpkgs.
+  # The 26.05 release branch shipped devenv 2.1.2, which cannot enter a
+  # harness shell on today's stdenv; the harness tracks nixos-unstable.
 
   ######## Nix ###############################################################
   nix.settings = {
+    # Prerequisite 3: flakes, and the devenv cache below.
     experimental-features = [ "nix-command" "flakes" ];
     # Only root is a trusted Nix user: a trusted user can hand the daemon any
     # option, and harness agents run as raulk (claude-nix-harness runbook, 4).
@@ -101,7 +116,8 @@
     # No nagging about an un-committed /etc/nixos.
     warn-dirty = false;
 
-    # Binary caches; devenv.cachix.org is what harness repos expect.
+    # Binary caches. devenv.cachix.org and its key are prerequisite 3: the
+    # exact entries `harness bootstrap` prints for a NixOS nix.settings.
     substituters = [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
@@ -127,7 +143,8 @@
   workbench.enable = true;
 
   ######## Run unpatched dynamic binaries ####################################
-  # VS Code server, node from npm, prebuilt CLIs, language servers, etc.
+  # VS Code server, the Claude Code extension's bundled binary, node from npm,
+  # prebuilt CLIs, language servers, etc.
   programs.nix-ld.enable = true;
 
   ######## Users #############################################################
@@ -144,18 +161,34 @@
   ######## Environment #######################################################
   environment.systemPackages = with pkgs; [
     git          # scripts/wsl/update.sh pulls /etc/nixos with it
-    bubblewrap   # the Claude Code sandbox
-    socat        # its network proxy
+    # Prerequisite 2: the Claude Code Bash sandbox and its network proxy.
+    bubblewrap
+    socat
+    # The basic toolset.
     vim
+    micro
     curl
     wget
+    dig          # bind's dig, host and nslookup
+    jq
     htop
     file
     unzip
     tree
     ripgrep
     fd
-    # jq, devenv, direnv, tmux, claude and ccmux come from the harness home module.
+    # ccmux sessions are tmux sessions: `harness bootstrap` writes its tmux
+    # config (a marked block in ~/.tmux.conf, or ~/.config/tmux/tmux.conf
+    # when there is no ~/.tmux.conf), `harness doctor` wants tmux on PATH,
+    # and you attach, list and detach the sessions from any shell with it.
+    tmux
+    # Not here on purpose: direnv, devenv, ccmux and harness come from
+    # `harness bootstrap` (nix profile).
+    # claude is deliberately not installed on the host. The VS Code extension
+    # on Windows runs its bundled binary inside WSL over Remote-WSL, which is
+    # enough for interactive use; work repos bring their own claude (and
+    # tmux) for tmux/ccmux sessions through harness.claudeCode.enable in their
+    # devenv shell, which `harness init` writes.
   ];
 
   # Windows tools worth reaching from Linux, at the end of PATH so they never

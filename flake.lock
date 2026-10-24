@@ -16,26 +16,6 @@
         "type": "github"
       }
     },
-    "harness": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1792835358,
-        "narHash": "sha256-AUo93PkvP9cQvYuVzBBbNTcjI76GHOTsz/sek7x2n4w=",
-        "owner": "bilibo",
-        "repo": "claude-nix-harness",
-        "rev": "a49c87752de17d8ce74a1475ecf81922e9c819e7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "bilibo",
-        "repo": "claude-nix-harness",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -115,7 +95,6 @@
     },
     "root": {
       "inputs": {
-        "harness": "harness",
         "home-manager": "home-manager",
         "nix-index-database": "nix-index-database",
         "nixos-wsl": "nixos-wsl",

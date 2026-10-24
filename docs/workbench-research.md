@@ -56,6 +56,14 @@ file, which is where this repo should go once your own modules arrive.
 Read before adopting, so nothing is installed twice or fights the harness
 (`lib/settings.nix`, `lib/deny-rules.nix`, `home/default.nix` on `main`, 2026-10-23):
 
+> 2026-10-24: the host no longer imports the harness modules (README). `jq` is back in
+> `environment.systemPackages`; direnv, devenv and ccmux come from `harness bootstrap`
+> (user profile), tmux and claude from a harness repo's shell or Claude Code's installer;
+> `programs.bash.enable` is gone from home-manager so the bootstrap can write `~/.bashrc`.
+> The session points below now hold inside harness repos only (`harness init` sets the wsl
+> platform there), and extra caches go into a repo's `harness.extraAllowedDomains`. The
+> 2026-10-23 text is kept as written.
+
 - Already provided by the harness home module and therefore not in this host: `jq`,
   `devenv`, `ccmux`, `programs.direnv` with nix-direnv, `programs.tmux`,
   `programs.claude-code`. The host's `jq` was removed for that reason. The host keeps
