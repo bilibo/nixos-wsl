@@ -23,11 +23,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1792770951,
-        "narHash": "sha256-GcazW9cMalT6dTJxGeawmMdP6cccGqUdu6YeoEC4N2U=",
+        "lastModified": 1792835358,
+        "narHash": "sha256-AUo93PkvP9cQvYuVzBBbNTcjI76GHOTsz/sek7x2n4w=",
         "owner": "bilibo",
         "repo": "claude-nix-harness",
-        "rev": "de124c9d2d2d4283e9aaddb6899beadf4ad692d6",
+        "rev": "a49c87752de17d8ce74a1475ecf81922e9c819e7",
         "type": "github"
       },
       "original": {
