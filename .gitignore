@@ -1,0 +1,12 @@
+result
+result-*
+.direnv/
+.devenv/
+.claude/
+# Covered by .claude/ above; listed so `harness init` on this checkout
+# (scripts/install.sh runs it) finds the lines it ensures.
+.claude/settings.json
+.claude/settings.local.json
+.claude/worktrees/
+
+*.log

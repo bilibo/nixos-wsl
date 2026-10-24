@@ -1,0 +1,46 @@
+# %USERPROFILE%\.wslconfig  -  global settings for the WSL2 VM (all WSL2 distros)
+# Machine: 16 GB RAM, 4C/8T i7-7700HQ, Windows 11 26H2, WSL 3.0.x
+# Apply changes with:   wsl --shutdown     (then start a distro again)
+
+[wsl2]
+# --- resources -------------------------------------------------------------
+# Hard ceiling for the VM. Windows keeps the other ~8 GB.
+memory=8GB
+# Leave 2 threads to Windows.
+processors=6
+# Swap inside the VM for Nix builds that spike; lives in a sparse vhdx.
+swap=4GB
+# Shut the VM down after this many ms with no distro running (default 60000).
+vmIdleTimeout=60000
+
+# --- networking ------------------------------------------------------------
+# Mirrored: the distro shares the Windows network interfaces and IPs,
+# so localhost works both ways, LAN devices can reach services in WSL,
+# and VPNs behave. Requires Windows 11 22H2+ (this box is 26H2).
+networkingMode=mirrored
+# Resolve DNS through Windows instead of a virtual NAT resolver (VPN-safe).
+dnsTunneling=true
+# Let Windows Firewall rules apply to WSL traffic (Hyper-V firewall).
+firewall=true
+# Pass Windows proxy settings (if any) into the distro.
+autoProxy=true
+
+# --- features --------------------------------------------------------------
+# GUI apps via WSLg (default true, kept explicit).
+guiApplications=true
+# Nested virt so KVM/qemu work inside the distro (default true on Win11).
+nestedVirtualization=true
+
+[experimental]
+# (WSL 3.0.3 still wants these two under [experimental]; it warns
+#  "Unknown key" if they are placed in [wsl2].)
+# Reclaim cached memory from the VM back to Windows while it idles.
+autoMemoryReclaim=gradual
+# Create new distro disks as sparse vhdx so unused space is returned to Windows.
+sparseVhd=true
+# In mirrored mode, let WSL reach Windows services bound to 127.0.0.1
+# and vice versa.
+hostAddressLoopback=true
+# With dnsTunneling, still answer queries that some VPN resolvers return in
+# odd shapes instead of failing them.
+bestEffortDnsParsing=true
