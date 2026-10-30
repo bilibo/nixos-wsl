@@ -1,0 +1,5 @@
+ms-vscode-remote.remote-wsl
+anthropic.claude-code
+ms-vscode.powershell
+jnoortheen.nix-ide
+timonwong.shellcheck

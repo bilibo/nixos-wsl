@@ -1,0 +1,27 @@
+# %USERPROFILE%\.wslconfig  -  global settings for the WSL2 VM (all WSL2 distros)
+# Machine: 16 GB RAM, 4C/8T i7-7700HQ, Windows 11 26H2, WSL 3.0.x
+# Apply changes with:   wsl --shutdown     (then start a distro again)
+# Only values that differ from Microsoft's defaults.
+
+[wsl2]
+# Left at defaults: memory (50%), swap (25%), vmIdleTimeout, dnsTunneling (on),
+# firewall (on), autoProxy (on), guiApplications (on), nestedVirtualization (on).
+# Leave 2 of 8 threads to Windows.
+processors=6
+# Share the Windows interfaces and IPs: localhost both ways, LAN reach.
+# Third-party VPN clients can break it; nat is the documented fallback
+# (https://learn.microsoft.com/en-us/windows/wsl/troubleshooting, https://github.com/microsoft/WSL/issues/13454).
+networkingMode=mirrored
+
+[experimental]
+# Left at defaults: hostAddressLoopback (off). WSL 3.0.3 wants these keys here, not in [wsl2].
+# Return cached VM memory to Windows while idle.
+autoMemoryReclaim=gradual
+# New distro disks are sparse vhdx, so freed space goes back to Windows.
+sparseVhd=true
+# Applies with dnsTunneling (on by default): tolerate oddly shaped VPN DNS answers.
+bestEffortDnsParsing=true
+
+# For long unattended jobs, keep the VM up while no distro runs:
+# [general]
+# instanceIdleTimeout=-1

@@ -1,0 +1,51 @@
+// %APPDATA%\Code\User\settings.json  -  the Windows (client) side of VS Code.
+// install-wsl.ps1 writes this file there only when none exists; otherwise merge it by hand.
+// VS Code reads comments here. Every key not listed stays at VS Code's default; delete a
+// line to go back to the default. All keys with their defaults and descriptions: the command
+// "Preferences: Open Default Settings (JSON)", or https://code.visualstudio.com/docs/configure/settings
+// The "Remote [WSL]" settings live in the distro (nixos/configuration.nix), not here.
+{
+  // Required while the distro is boxed: Remote-WSL starts its server without the script on
+  // /mnt/c. Experimental (microsoft/vscode-remote-release issue 11333). Turn off only after
+  // setting windowsDrives and windowsInterop to true in nixos/configuration.nix.
+  "remote.WSL.experimental.scriptLessStartup": true,
+
+  // No usage data. Default is "all".
+  "telemetry.telemetryLevel": "off",
+
+  // Git credentials (also in the remote settings; repeated here for local windows):
+  // the Source Control view asks for your SSH passphrase in an input box on every push
+  // or pull (useIntegratedAskPass, the default). Integrated terminals, where agents run,
+  // get no prompt helper from VS Code: the git extension gives it to terminals only when
+  // both askpass keys are on. The GitHub sign-in is never a silent credential. Set
+  // terminalAuthentication to true (its default) to get the prompt in terminals too.
+  "git.useIntegratedAskPass": true,
+  "git.terminalAuthentication": false,
+  "github.gitAuthentication": false,
+  // Background fetches would raise that prompt at random; fetch by hand. Default is false.
+  "git.autofetch": false,
+  // No confirmation dialog on Sync. Default is true.
+  "git.confirmSync": false,
+
+  // Copilot and the built-in chat off; Claude Code is the assistant here. Default is false.
+  "chat.disableAIFeatures": true,
+  // Permission bypass mode stays unavailable in the Claude Code extension (its default).
+  // Set true only inside a sandbox with no network.
+  "claudeCode.allowDangerouslySkipPermissions": false,
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.hideOnboarding": true,
+  "claudeCode.focusView": false,
+
+  // Layout and editor taste; drop or change freely.
+  "workbench.startupEditor": "none",
+  "workbench.sideBar.location": "right",
+  "workbench.activityBar.location": "bottom",
+  "editor.minimap.enabled": false,
+  // Open single files from untrusted folders without the trust prompt. Default is "prompt".
+  "security.workspace.trust.untrustedFiles": "open",
+  // tmux and shell keybindings win over VS Code's in the terminal. Default is false.
+  "terminal.integrated.sendKeybindingsToShell": true,
+  // The Nerd Font install-wsl.ps1 installs, so the starship prompt's icons render in the
+  // integrated terminal. Default is the editor font.
+  "terminal.integrated.fontFamily": "'CaskaydiaMono NFM'"
+}
